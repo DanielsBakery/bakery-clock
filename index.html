@@ -297,7 +297,7 @@ textarea { min-height: 120px; font-family: ui-monospace, "SF Mono", Menlo, Conso
           <label class="f" for="cl-email">Email<input type="text" id="cl-email" inputmode="email" autocomplete="username" autocapitalize="none"></label>
           <label class="f" for="cl-pass">Password<input type="password" id="cl-pass" autocomplete="current-password"></label>
         </div>
-        <div class="row"><button class="btn primary" id="cl-signin" type="button">Sign in</button><button class="btn" id="cl-signup" type="button">Create account</button></div>
+        <div class="row"><button class="btn primary" id="cl-signin" type="button">Sign in</button><button class="btn" id="cl-signup" type="button">Create account</button><button class="btn" id="cl-forgot" type="button">Forgot password?</button></div>
       </div>
       <div id="cl-signedin" hidden class="row">
         <button class="btn primary" id="cl-now" type="button">Sync now</button><button class="btn" id="cl-out" type="button">Sign out</button>
@@ -964,6 +964,7 @@ textarea { min-height: 120px; font-family: ui-monospace, "SF Mono", Menlo, Conso
     if (/invalid-email/.test(c)) return 'That email address does not look right.';
     if (/network/.test(c)) return 'No connection right now. Your data is safe on this device and will sync later.';
     if (/operation-not-allowed|configuration-not-found/.test(c)) return 'Email sign-in is not switched on in Firebase yet. Turn on Email/Password under Authentication.';
+    if (/too-many-requests/.test(c)) return 'Too many tries. Wait a few minutes and try again.';
     if (/permission-denied/.test(c)) return 'Firebase refused the save. Check the Firestore rules.';
     return 'Something went wrong' + (c ? ' (' + c + ')' : '') + '.';
   }
@@ -1055,6 +1056,11 @@ textarea { min-height: 120px; font-family: ui-monospace, "SF Mono", Menlo, Conso
   $('cl-signup').addEventListener('click', function () {
     var c = creds(); if (!c.e || !c.p) { clMsg('Enter an email and choose a password.', 'err'); return; }
     clMsg('Creating account...'); fb.auth.createUserWithEmailAndPassword(c.e, c.p).then(function () { $('cl-pass').value = ''; clMsg(''); }, function (e) { clMsg(friendly(e), 'err'); });
+  });
+  $('cl-forgot').addEventListener('click', function () {
+    var e = $('cl-email').value.trim();
+    if (!e) { clMsg('Type your email above first, then tap Forgot password.', 'err'); return; }
+    clMsg('Sending...'); fb.auth.sendPasswordResetEmail(e).then(function () { clMsg('If that email has an account, a reset link is on its way. Check your spam folder too.', 'ok'); }, function (er) { clMsg(friendly(er), 'err'); });
   });
   $('cl-out').addEventListener('click', function () { fb.auth.signOut(); clMsg('Signed out. Your hours stay on this device.'); });
   $('cl-now').addEventListener('click', function () { clearTimeout(fb.timer); state.ts = Date.now(); saveLocal(); pushNow(); });
